@@ -16,8 +16,8 @@ import org.springframework.context.annotation.ComponentScan;
  */
 @SpringBootApplication
 @ComponentScan("com.atguigu")
-public class HospApplicationStarter {
+public class ServiceHospApplication{
     public static void main(String[] args) {
-        SpringApplication.run(HospApplicationStarter.class,args);
+        SpringApplication.run(ServiceHospApplication.class,args);
     }
 }

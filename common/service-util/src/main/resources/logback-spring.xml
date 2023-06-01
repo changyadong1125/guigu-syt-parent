@@ -17,7 +17,7 @@ debug:当此属性设置为true时，将打印出logback内部日志信息，实
     通过property定义的值会被插入到logger上下文中。
     定义变量后，可以使“${name}”来使用变量。
     -->
-    <property name="charset" value="UTF-8"></property>
+    <property name="charset" value="UTF-8"/>
     <!--控制台彩色日志日志格式-->
     <!-- magenta:洋红 -->
     <!-- boldMagenta:粗红-->

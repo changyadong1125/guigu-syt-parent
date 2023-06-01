@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.syt.cmn.mapper.DictTypeMapper">
+
+
+    <resultMap id="app" type="com.atguigu.syt.vo.cmn.DictTypeVo" >
+        <id column="id" property="id" typeHandler="com.atguigu.syt.cmn.config.MyTypeHandler"/>
+        <result column="name" property="name"/>
+        <collection property="children" ofType="com.atguigu.syt.vo.cmn.DictVo">
+            <id column="A" property="id" typeHandler="com.atguigu.syt.cmn.config.MyTypeHandler2" />
+            <result column="B" property="name"/>
+            <result column="C" property="value"/>
+        </collection>
+    </resultMap>
+
+    <!--     List<DictTypeVo> findAll_xml();-->
+    <select id="findAll_xml" resultMap="app">
+        SELECT dt.id ,dt.name,d.id A,d.name B,d.value C
+        FROM dict_type dt JOIN dict d ON
+            dt.`id` = d.`dict_type_id`
+    </select>
+
+</mapper>
