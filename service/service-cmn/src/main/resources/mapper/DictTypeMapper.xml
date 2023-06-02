@@ -4,10 +4,10 @@
 
 
     <resultMap id="app" type="com.atguigu.syt.vo.cmn.DictTypeVo" >
-        <id column="id" property="id" typeHandler="com.atguigu.syt.cmn.config.MyTypeHandler"/>
+        <id column="id" property="id" typeHandler="com.atguigu.syt.cmn.config.MyTypeHandler_parent"/>
         <result column="name" property="name"/>
         <collection property="children" ofType="com.atguigu.syt.vo.cmn.DictVo">
-            <id column="A" property="id" typeHandler="com.atguigu.syt.cmn.config.MyTypeHandler2" />
+            <id column="A" property="id" typeHandler="com.atguigu.syt.cmn.config.MyTypeHandler_children" />
             <result column="B" property="name"/>
             <result column="C" property="value"/>
         </collection>

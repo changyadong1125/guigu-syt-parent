@@ -21,3 +21,11 @@ public class ServiceHospApplication{
         SpringApplication.run(ServiceHospApplication.class,args);
     }
 }
+/*
+整合mongoDB
+导入依赖 spring-boot-starter-data-mongodb
+配置yml文件 数据库连接
+创建pojo类 @document @id @field
+创建接口UserRepository实现MongoRepository<User,ObjectId>
+引入UserRepository实现类对象
+ */

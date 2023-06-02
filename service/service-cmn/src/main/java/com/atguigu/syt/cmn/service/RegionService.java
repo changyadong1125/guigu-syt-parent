@@ -2,6 +2,7 @@ package com.atguigu.syt.cmn.service;
 
 
 import com.atguigu.syt.model.cmn.Region;
+import com.atguigu.syt.vo.cmn.RegionExcelVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import java.util.List;
@@ -17,4 +18,8 @@ import java.util.List;
 public interface RegionService extends IService<Region> {
 
     List<Region> getRegionListByParentCode(String parentCode);
+
+    List<RegionExcelVo> getRegionList();
+
+    void batchInsert(List<RegionExcelVo> cachedDataList);
 }

@@ -17,6 +17,5 @@ import java.util.List;
  */
 public interface DictTypeMapper extends BaseMapper<DictType> {
 
-
     List<DictTypeVo> findAll_xml();
 }

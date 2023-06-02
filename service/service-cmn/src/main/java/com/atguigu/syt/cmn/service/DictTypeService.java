@@ -17,5 +17,5 @@ import java.util.List;
  */
 public interface DictTypeService extends IService<DictType> {
     List<DictTypeVo> getDictTypeLists();
-    public List<DictTypeVo> findAll_xml();
+    List<DictTypeVo> findAll_xml();
 }

@@ -55,10 +55,7 @@ public class DictTypeServiceImpl extends ServiceImpl<DictTypeMapper, DictType> i
         }).collect(Collectors.toList());
     }
     public List<DictTypeVo> findAll_xml() {
-        int a = 3;
-        List<DictTypeVo> all_xml = baseMapper.findAll_xml();
-        int a1= 3;
-        return all_xml;
+        return baseMapper.findAll_xml();
     }
 
 }

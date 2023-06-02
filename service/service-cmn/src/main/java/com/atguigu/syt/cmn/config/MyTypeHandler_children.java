@@ -22,27 +22,27 @@ import java.sql.SQLException;
  */
 @MappedTypes(String.class)
 @MappedJdbcTypes(JdbcType.BIGINT)
-public class MyTypeHandler implements TypeHandler<String> {
+public class MyTypeHandler_children implements TypeHandler<String> {
 
 
     @Override
-    public void setParameter(PreparedStatement ps, int i, String parameter, JdbcType jdbcType) throws SQLException {
-
+    public void setParameter(PreparedStatement ps, int i, String parameter, JdbcType jdbcType)  {
     }
 
     @Override
     public String getResult(ResultSet rs, String columnName) throws SQLException {
-        long id = rs.getLong("id");
-        return "parent-"+id;
+        long id = rs.getLong("A");
+        return "children-"+id;
     }
 
     @Override
-    public String getResult(ResultSet rs, int columnIndex) throws SQLException {
+    public String getResult(ResultSet rs, int columnIndex) {
         return null;
+
     }
 
     @Override
-    public String getResult(CallableStatement cs, int columnIndex) throws SQLException {
+    public String getResult(CallableStatement cs, int columnIndex) {
         return null;
     }
 }

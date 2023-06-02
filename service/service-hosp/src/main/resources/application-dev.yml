@@ -15,10 +15,24 @@ spring:
     nacos:
       discovery:
         server-addr: localhost:8848
+  data:
+    mongodb:
+      host: 192.168.184.25
+      username: atguigu
+      password: "190325"
+      database: syt
+      port: 27017
 
 logging:
   level:
+
     root: info
+    org:
+      mongodb:
+        driver:
+          protocol:
+            command: debug
+
   file:
     path: hosp
 
