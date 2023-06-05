@@ -22,4 +22,6 @@ public interface RegionService extends IService<Region> {
     List<RegionExcelVo> getRegionList();
 
     void batchInsert(List<RegionExcelVo> cachedDataList);
+
+    String getRegionNameByCode(String code);
 }

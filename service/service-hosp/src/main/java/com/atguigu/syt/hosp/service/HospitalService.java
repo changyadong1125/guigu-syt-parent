@@ -1,6 +1,7 @@
 package com.atguigu.syt.hosp.service;
 
 import com.atguigu.syt.model.hosp.Hospital;
+import org.springframework.data.domain.Page;
 
 import java.util.HashMap;
 
@@ -19,4 +20,8 @@ public interface HospitalService {
 
 
     Hospital getHospital(String hoscode);
+
+    Page<Hospital> getHospitalPageList(Integer pageNum, Integer pageSize, String hosname);
+
+    void updateStatus(String hoscode, Integer status);
 }

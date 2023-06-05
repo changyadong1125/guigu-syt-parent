@@ -40,3 +40,14 @@ logging:
 mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+feign:
+  client:
+    config:
+      default:
+        connect-timeout: 2000 #连接建立的超时时长，单位是ms，默认1s
+        read-timeout: 2000 #处理请求的超时时间，单位是ms，默认为1s
+  sentinel:
+    enabled: true
+
+
+

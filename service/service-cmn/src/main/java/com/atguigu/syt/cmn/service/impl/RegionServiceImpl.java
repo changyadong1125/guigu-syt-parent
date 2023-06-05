@@ -72,6 +72,17 @@ public class RegionServiceImpl extends ServiceImpl<RegionMapper, Region> impleme
         long start = System.currentTimeMillis();
         baseMapper.batchInsert(cachedDataList);
         long end = System.currentTimeMillis();
-        log.info("插入完成一共花费"+(end-start)+"ms");
+        log.info("插入完成一共花费" + (end - start) + "ms");
+    }
+
+    /**
+     * return:
+     * author: smile
+     * version: 1.0
+     * description:根据编号获取地区名称
+     */
+    @Override
+    public String getRegionNameByCode(String code) {
+        return baseMapper.selectOne(new LambdaQueryWrapper<Region>().eq(Region::getCode, code)).getName();
     }
 }
