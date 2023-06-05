@@ -18,6 +18,13 @@
     </properties>
 
     <dependencies>
+
+        <!--fastjson-->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+        </dependency>
+
         <!--MP代码生成器-->
         <dependency>
             <groupId>com.baomidou</groupId>

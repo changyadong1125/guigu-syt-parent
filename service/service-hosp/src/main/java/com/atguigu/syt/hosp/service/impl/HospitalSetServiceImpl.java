@@ -1,5 +1,7 @@
 package com.atguigu.syt.hosp.service.impl;
 
+import com.atguigu.common.service.exception.GuiguException;
+import com.atguigu.common.util.result.ResultCodeEnum;
 import com.atguigu.syt.hosp.entity.HospitalSet;
 import com.atguigu.syt.hosp.mapper.HospitalSetMapper;
 import com.atguigu.syt.hosp.service.HospitalSetService;
@@ -34,4 +36,38 @@ public class HospitalSetServiceImpl extends ServiceImpl<HospitalSetMapper, Hospi
         hospitalSetLambdaQueryWrapper.eq(!StringUtils.isEmpty(hospitalSetQueryVo.getHoscode()), HospitalSet::getHoscode, hospitalSetQueryVo.getHoscode());
         return baseMapper.selectPage(page, hospitalSetLambdaQueryWrapper);
     }
+
+    /**
+     * return:
+     * author: smile
+     * version: 1.0
+     * description:
+     * 根据hoscode获取我方的签名信息
+     */
+    @Override
+    public String getSignKey(String hoscode) {
+        HospitalSet hospitalSet = getHospitalSet(hoscode);
+        if (hospitalSet == null){
+            throw new GuiguException(ResultCodeEnum.HOSPITAL_OPEN);
+        }
+        if (hospitalSet.getStatus() == 0){
+            throw new GuiguException(ResultCodeEnum.HOSPITAL_LOCK);
+        }
+        return hospitalSet.getSignKey();
+    }
+
+    /**
+     * return:
+     * author: smile
+     * version: 1.0
+     * description:
+     * 根据编号获取医院设置信息
+     */
+    public HospitalSet getHospitalSet(String hoscode) {
+        LambdaQueryWrapper<HospitalSet> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(HospitalSet::getHoscode, hoscode);
+        return baseMapper.selectOne(queryWrapper);
+    }
+
+
 }
