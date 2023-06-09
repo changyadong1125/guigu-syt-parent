@@ -17,6 +17,10 @@ spring:
           uri: lb://service-cmn
           predicates:
             - Path=/*/cmn/**
+        - id: service-cmn
+          uri: lb://service-user
+          predicates:
+            - Path=/*/user/**
 server:
   port: 8200
 

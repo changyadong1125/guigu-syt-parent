@@ -11,9 +11,11 @@ import com.atguigu.syt.hosp.service.HospitalService;
 import com.atguigu.syt.model.hosp.Hospital;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -88,7 +90,7 @@ public class HospitalServiceImp implements HospitalService {
     public Page<Hospital> getHospitalPageList(Integer pageNum, Integer pageSize, String hosname) {
         PageRequest pageRequest = PageRequest.of(pageNum - 1, pageSize, Sort.by(Sort.Order.asc("hoscode")));
         Hospital hospital = new Hospital();
-        if (hosname != null) {
+        if (!StringUtils.isEmpty(hosname)) {
             hospital.setHosname(hosname);
         }
         ExampleMatcher exampleMatcher = ExampleMatcher.matching().withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING);
@@ -120,6 +122,53 @@ public class HospitalServiceImp implements HospitalService {
             throw new GuiguException(ResultCodeEnum.PARAM_ERROR);
         }
 
+    }
+
+    /**
+     * return:
+     * author: smile
+     * version: 1.0
+     * description:获取医院详情信息
+     */
+    @Override
+    public Hospital getHosDetail(String hoscode) {
+        Hospital hospital = new Hospital();
+        hospital.setHoscode(hoscode);
+        Optional<Hospital> optionalHospital = hospitalRepository.findOne(Example.of(hospital));
+        if (optionalHospital.isPresent()){
+            Hospital hospitalWithRegion = optionalHospital.get();
+            this.pageRegionInfoByCode(hospitalWithRegion);
+            return hospitalWithRegion;
+        }else{
+            throw new GuiguException(ResultCodeEnum.PARAM_ERROR);
+        }
+    }
+
+    /**
+     * return:
+     * author: smile
+     * version: 1.0
+     * description:根据条件查询医院
+     */
+    @Override
+    public List<Hospital> getHospitalList(String hosname, String hostype, String districtCode) {
+
+        //封装条件对象
+        Hospital hospital = new Hospital();
+        hospital.setHosname(hosname);
+        hospital.setHostype(hostype);
+        hospital.setDistrictCode(districtCode);
+        hospital.setStatus(1);
+
+        //设置查询条件
+        ExampleMatcher exampleMatcher = ExampleMatcher.matching().withMatcher("hosname", ExampleMatcher.GenericPropertyMatchers.contains())
+                .withMatcher("hostype", ExampleMatcher.GenericPropertyMatchers.exact())
+                .withMatcher("districtCode", ExampleMatcher.GenericPropertyMatchers.exact());
+        Example<Hospital> example = Example.of(hospital, exampleMatcher);
+        Sort sort = Sort.by(Sort.Order.asc("hoscode"));
+        List<Hospital> hospitalList = hospitalRepository.findAll(example, sort);
+        hospitalList.forEach(this::pageRegionInfoByCode);
+        return hospitalList;
     }
 
     /**

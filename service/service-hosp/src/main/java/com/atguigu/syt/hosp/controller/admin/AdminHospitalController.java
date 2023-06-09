@@ -53,8 +53,22 @@ public class AdminHospitalController {
      * description:修改医院状态
      */
     @PutMapping("/status/{hoscode}/{status}")
+    @ApiOperation("修改医院状态")
     public Result<?> updateStatus(@PathVariable String hoscode, @PathVariable Integer status) {
         hospitalService.updateStatus(hoscode, status);
         return Result.ok();
+    }
+
+    /**
+     * return:
+     * author: smile
+     * version: 1.0
+     * description:返回医院详情信息
+     */
+    @GetMapping("/detail/{hoscode}")
+    @ApiOperation("查询医院详细信息")
+    public Result<?> getHosDetail(@PathVariable String hoscode) {
+        Hospital hospital = hospitalService.getHosDetail(hoscode);
+        return Result.ok(hospital);
     }
 }

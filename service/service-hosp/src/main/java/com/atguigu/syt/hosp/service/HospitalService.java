@@ -4,6 +4,7 @@ import com.atguigu.syt.model.hosp.Hospital;
 import org.springframework.data.domain.Page;
 
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * project:guigu-syt-parent
@@ -24,4 +25,8 @@ public interface HospitalService {
     Page<Hospital> getHospitalPageList(Integer pageNum, Integer pageSize, String hosname);
 
     void updateStatus(String hoscode, Integer status);
+
+    Hospital getHosDetail(String hoscode);
+
+    List<Hospital> getHospitalList(String hosname, String hostype, String districtCode);
 }

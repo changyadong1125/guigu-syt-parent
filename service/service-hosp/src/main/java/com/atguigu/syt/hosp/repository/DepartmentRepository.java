@@ -4,6 +4,8 @@ import com.atguigu.syt.model.hosp.Department;
 import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
+import java.util.List;
+
 /**
  * project:guigu-syt-parent
  * package:com.atguigu.syt.hosp.repository
@@ -16,4 +18,6 @@ import org.springframework.data.mongodb.repository.MongoRepository;
  */
 public interface DepartmentRepository extends MongoRepository<Department, ObjectId> {
     Department findByHoscodeAndDepcode(String hoscode, String depcode);
+
+    List<Department> findByHoscode(String hoscode);
 }

@@ -4,6 +4,8 @@ import com.atguigu.syt.model.hosp.Schedule;
 import org.springframework.data.domain.Page;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * project:guigu-syt-parent
@@ -21,4 +23,7 @@ public interface ScheduleService {
     Page<Schedule> getScheduleList(int page, int limit, String hoscode);
     void removeByHoscodeAndHosScheduleId(String hoscode, String hosScheduleId);
 
+    Map<String, Object> getScheduleRule(Integer page, Integer limit, String hoscode, String depcode);
+
+    List<Schedule> getScheduleDetail(String hoscode, String depcode, String workDate);
 }
