@@ -1,0 +1,24 @@
+server:
+  port: 8204
+spring:
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+logging:
+  level:
+    root: info
+  file:
+    path: yun
+
+aliyun:
+  oss: #阿里云 OSS
+    endpoint: oss-cn-beijing.aliyuncs.com
+    key-id: LTAI5tHvdBQNCvscBUuyWj1g
+    key-secret: yvaBwt0NtdHq82ETi30sY9JZaRd0fI
+    bucket-name: syt0201cyd

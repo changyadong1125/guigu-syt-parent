@@ -2,6 +2,7 @@ package com.atguigu.syt.user.controller.front;
 
 import com.atguigu.syt.user.utils.ConstantProperties;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,6 +37,7 @@ public class FrontWxController {
      * description:微信登录接口
      */
     @GetMapping("/login")
+    @ApiOperation("微信登录")
     public String login(HttpServletRequest request) {
 
         long aLong = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);

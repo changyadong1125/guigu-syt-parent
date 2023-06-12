@@ -2,15 +2,15 @@ package com.atguigu.syt.user.controller.api;
 
 import com.alibaba.fastjson.JSONObject;
 import com.atguigu.common.service.exception.GuiguException;
-import com.atguigu.common.service.utils.CookieUtils;
+import com.atguigu.common.service.utils.AuthContextHolder;
 import com.atguigu.common.service.utils.HttpUtil;
 import com.atguigu.common.util.result.ResultCodeEnum;
 import com.atguigu.syt.enums.UserStatusEnum;
 import com.atguigu.syt.model.user.UserInfo;
 import com.atguigu.syt.user.service.UserInfoService;
 import com.atguigu.syt.user.utils.ConstantProperties;
+import com.atguigu.syt.vo.user.UserVo;
 import io.swagger.annotations.Api;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,8 +23,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.net.URLEncoder;
 import java.util.Objects;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 /**
  * project:guigu-syt-parent
@@ -46,7 +44,7 @@ public class ApiWxController {
     @Resource
     private ConstantProperties constantProperties;
     @Resource
-    private RedisTemplate<String, Object> redisTemplate;
+    private AuthContextHolder authContextHolder;
 
     @GetMapping("/callback")
     public String callback(@RequestParam String code, @RequestParam String state, HttpServletRequest request, HttpServletResponse response) {
@@ -116,18 +114,11 @@ public class ApiWxController {
             if (StringUtils.isEmpty(name)) {
                 name = userInfo.getNickName();
             }
-            //生成token
-            String token = UUID.randomUUID().toString().replaceAll("-", "");
-            //将token做key，用户id做值存入redis
-            redisTemplate.opsForValue()//30分钟
-                    .set("user:token:" + token, userInfo.getId(), 30, TimeUnit.MINUTES);
-
-            //将token和name存入cookie
-            //将"资料>微信登录>CookieUtils.java"放入service-utils模块
-            int cookieMaxTime = 60 * 30;//30分钟
-            CookieUtils.setCookie(response, "token", token, cookieMaxTime);
-            CookieUtils.setCookie(response, "name", URLEncoder.encode(name), cookieMaxTime);
-            CookieUtils.setCookie(response, "headimgurl", URLEncoder.encode(userInfo.getHeadImgUrl()), cookieMaxTime);
+            UserVo userVo = new UserVo();
+            userVo.setUserId(userInfo.getId());
+            userVo.setName(name);
+            userVo.setHeadimgurl(userInfo.getHeadImgUrl());
+            authContextHolder.setToken(response,userVo);
 
             return "redirect:" + constantProperties.getSytBaseUrl();
 
