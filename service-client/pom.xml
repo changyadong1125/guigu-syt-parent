@@ -14,6 +14,8 @@
     <modules>
         <module>service-cmn-client</module>
         <module>service-yun-client</module>
+        <module>service-user-client</module>
+        <module>service-hosp-client</module>
     </modules>
 
 
@@ -23,6 +25,11 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <dependencies>
+        <dependency>
+            <groupId>com.atguigu</groupId>
+            <artifactId>model</artifactId>
+            <version>1.0</version>
+        </dependency>
         <!-- 服务调用 -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>

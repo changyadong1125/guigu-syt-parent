@@ -74,6 +74,18 @@ public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> impl
      * return:
      * author: smile
      * version: 1.0
+     * description:根据就诊人id获取就诊人信息
+     */
+    @Override
+    public Patient getPatient(Long id) {
+        return this.getById(id);
+
+    }
+
+    /**
+     * return:
+     * author: smile
+     * version: 1.0
      * description:封装就诊人信息
      */
     private void packagePatient(Patient patient) {

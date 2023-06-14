@@ -1,7 +1,16 @@
 package com.atguigu.syt.order.controller.front;
 
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.atguigu.common.service.utils.AuthContextHolder;
+import com.atguigu.common.util.result.Result;
+import com.atguigu.syt.model.order.OrderInfo;
+import com.atguigu.syt.order.service.OrderInfoService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * project:guigu-syt-parent
@@ -15,5 +24,37 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/front/order/orderInfo")
+@Api("预约订单文档")
+@RequiredArgsConstructor
 public class FrontOrderInfoController {
+    private final OrderInfoService orderInfoService;
+    private final AuthContextHolder authContextHolder;
+
+    /**
+     * return:
+     * author: smile
+     * version: 1.0
+     * description:保存订单信息
+     */
+    @PostMapping("/order/{patientId}/{scheduleId}")
+    @ApiOperation("保存订单信息")
+    public Result<?> orderInfoSave(@PathVariable String scheduleId, @PathVariable Long patientId, HttpServletResponse response, HttpServletRequest request){
+        Long uid = authContextHolder.checkAuth(request, response);
+        Long orderId = orderInfoService.saveOrderInfo(uid,scheduleId,patientId);
+        return Result.ok(orderId);
+    }
+    /**
+     * return:
+     * author: smile
+     * version: 1.0
+     * description:获取订单详情信息
+     */
+    @GetMapping("/info/{orderId}")
+    @ApiOperation("获取订单详情")
+    public Result<?> getOrderInfo(@PathVariable Long orderId, HttpServletResponse response, HttpServletRequest request) {
+        Long uid = authContextHolder.checkAuth(request, response);
+        OrderInfo orderInfo = orderInfoService.getOrderInfo(uid,orderId);
+        return Result.ok(orderInfo);
+    }
+
 }

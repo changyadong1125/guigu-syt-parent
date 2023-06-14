@@ -21,4 +21,6 @@ public interface PatientService extends IService<Patient> {
     Patient selectByIdAndUid(Long id, Long uid);
 
     List<Patient> getAll(Long uid);
+
+    Patient getPatient(Long id);
 }

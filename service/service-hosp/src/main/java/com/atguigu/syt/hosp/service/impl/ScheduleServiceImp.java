@@ -7,13 +7,16 @@ import com.atguigu.syt.hosp.repository.ScheduleRepository;
 import com.atguigu.syt.hosp.service.ScheduleService;
 import com.atguigu.syt.hosp.utils.DateUtil;
 import com.atguigu.syt.model.hosp.BookingRule;
+import com.atguigu.syt.model.hosp.Department;
 import com.atguigu.syt.model.hosp.Hospital;
 import com.atguigu.syt.model.hosp.Schedule;
 import com.atguigu.syt.vo.hosp.BookingScheduleRuleVo;
+import com.atguigu.syt.vo.hosp.ScheduleOrderVo;
 import com.atguigu.syt.vo.hosp.ScheduleRuleVo;
 import org.bson.types.ObjectId;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
+import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.*;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -230,12 +233,51 @@ public class ScheduleServiceImp implements ScheduleService {
     @Override
     public Schedule getById(String id) {
         Optional<Schedule> optionalSchedule = scheduleRepository.findById(new ObjectId(id));
-        if (optionalSchedule.isPresent()){
+        if (optionalSchedule.isPresent()) {
             Schedule schedule = optionalSchedule.get();
             this.packageSchedule(schedule);
             return schedule;
         }
         return null;
+    }
+
+    /**
+     * return:
+     * author: smile
+     * version: 1.0
+     * description:根据排班id获取预约下单数据
+     */
+    @Override
+    public ScheduleOrderVo getScheduleOrderVo(String scheduleId) {
+        Optional<Schedule> scheduleOptional = scheduleRepository.findById(new ObjectId(scheduleId));
+        if (scheduleOptional.isPresent()) {
+            Schedule schedule = scheduleOptional.get();
+            ScheduleOrderVo scheduleOrderVo = new ScheduleOrderVo();
+            this.packageScheduleToScheduleOrderVo(schedule, scheduleOrderVo);
+            return scheduleOrderVo;
+        }
+        return null;
+    }
+
+    /**
+     * return:
+     * author: smile
+     * version: 1.0
+     * description:将根据Schedule查询到的排班信息封装为scheduleOrderVo
+     */
+    private void packageScheduleToScheduleOrderVo(Schedule schedule, ScheduleOrderVo scheduleOrderVo) {
+        BeanUtils.copyProperties(schedule, scheduleOrderVo);
+        Hospital hospital = hospitalRepository.getByHoscode(schedule.getHoscode());
+        Department department = departmentRepository.findByHoscodeAndDepcode(schedule.getHoscode(), schedule.getDepcode());
+        scheduleOrderVo.setHosname(hospital.getHosname());
+        scheduleOrderVo.setDepname(department.getDepname());
+        scheduleOrderVo.setReserveDate(schedule.getWorkDate());
+        scheduleOrderVo.setReserveTime(schedule.getWorkTime());
+
+        BookingRule bookingRule = hospital.getBookingRule();
+        DateTime dateTime = new DateTime(schedule.getWorkDate()).plusDays(bookingRule.getQuitDay());
+        DateTime toDateTime = this.parseDateToDateTime(dateTime.toDate(), bookingRule.getQuitTime());
+        scheduleOrderVo.setQuitTime(toDateTime.toDate());
     }
 
     /**
@@ -285,7 +327,7 @@ public class ScheduleServiceImp implements ScheduleService {
         List<Date> currentPageDateList = new ArrayList<>();
         int start = (pageNum - 1) * pageSize;
         int end = start + pageSize;
-        if(end> dateList.size()) end = dateList.size();
+        if (end > dateList.size()) end = dateList.size();
 
         for (int i = start; i < end; i++) {
             currentPageDateList.add(dateList.get(i));

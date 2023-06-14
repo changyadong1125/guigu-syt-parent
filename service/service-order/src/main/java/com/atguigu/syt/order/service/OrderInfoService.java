@@ -14,4 +14,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface OrderInfoService extends IService<OrderInfo> {
 
+    Long saveOrderInfo(Long uid, String scheduleId, Long patientId);
+
+    OrderInfo getOrderInfo(Long uid, Long orderId);
 }

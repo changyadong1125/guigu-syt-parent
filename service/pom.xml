@@ -27,6 +27,19 @@
     </properties>
 
     <dependencies>
+
+        <dependency>
+            <groupId>com.atguigu</groupId>
+            <artifactId>service-user-client</artifactId>
+            <version>1.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.atguigu</groupId>
+            <artifactId>service-hosp-client</artifactId>
+            <version>1.0</version>
+        </dependency>
+
         <!--服务注册-->
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
