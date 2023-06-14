@@ -9,12 +9,17 @@ import com.atguigu.syt.model.user.UserInfo;
 import com.atguigu.syt.user.mapper.UserInfoMapper;
 import com.atguigu.syt.user.service.UserInfoService;
 import com.atguigu.syt.vo.user.UserAuthVo;
+import com.atguigu.syt.vo.user.UserInfoQueryVo;
 import com.atguigu.syt.yun.client.FileFeignClient;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
+import java.util.Objects;
 
 /**
  * <p>
@@ -69,6 +74,56 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
         UserInfo userInfo = baseMapper.selectById(aLong);
         this.packageUserInfo(userInfo);
         return userInfo;
+    }
+
+    /**
+     * return:
+     * author: smile
+     * version: 1.0
+     * description:用户信息查询
+     */
+
+    @Override
+    public Page<UserInfo> selectPage(Integer pageNum, Integer pageSize, UserInfoQueryVo userInfoQueryVo) {
+        Page<UserInfo> page = new Page<>(pageNum, pageSize);
+        LambdaQueryWrapper<UserInfo> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.and(!StringUtils.isEmpty(userInfoQueryVo.getKeyword()), A -> A.like(UserInfo::getName, userInfoQueryVo.getKeyword())
+                        .or()
+                        .like(UserInfo::getPhone, userInfoQueryVo.getKeyword()))
+                .ge(!StringUtils.isEmpty(userInfoQueryVo.getCreateTimeBegin()), UserInfo::getCreateTime, userInfoQueryVo.getCreateTimeBegin())
+                .le(!StringUtils.isEmpty(userInfoQueryVo.getCreateTimeEnd()), UserInfo::getUpdateTime, userInfoQueryVo.getCreateTimeEnd());
+        page = baseMapper.selectPage(page, queryWrapper);
+        page.getRecords().forEach(this::packageUserInfo);
+        return page;
+    }
+
+    /**
+     * return:
+     * author: smile
+     * version: 1.0
+     * description:修改用户认证状态
+     */
+    @Override
+    public boolean approval(Integer id, Integer authStatus) {
+        if (Objects.equals(authStatus, AuthStatusEnum.AUTH_SUCCESS.getStatus())
+                || Objects.equals(authStatus, AuthStatusEnum.AUTH_FAIL.getStatus())) {
+            UserInfo userInfo = new UserInfo();
+            userInfo.setId(Long.valueOf(id));
+            userInfo.setAuthStatus(authStatus);
+            return this.updateById(userInfo);
+        }
+        return false;
+    }
+
+    @Override
+    public boolean lock(Integer id, Integer status) {
+        if (status == 0 || status == 1) {
+            UserInfo userInfo = new UserInfo();
+            userInfo.setId(Long.valueOf(id));
+            userInfo.setStatus(status);
+            return this.updateById(userInfo);
+        }
+        return false;
     }
 
     /**

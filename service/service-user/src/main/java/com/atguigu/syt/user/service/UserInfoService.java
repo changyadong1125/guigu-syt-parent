@@ -3,6 +3,8 @@ package com.atguigu.syt.user.service;
 
 import com.atguigu.syt.model.user.UserInfo;
 import com.atguigu.syt.vo.user.UserAuthVo;
+import com.atguigu.syt.vo.user.UserInfoQueryVo;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
@@ -20,4 +22,10 @@ public interface UserInfoService extends IService<UserInfo> {
     boolean updateUserInfo(Long uid, UserAuthVo userAuthVo);
 
     UserInfo getAuthUserInfo(Long aLong);
+
+    Page<UserInfo> selectPage(Integer pageNum, Integer pageSize, UserInfoQueryVo userInfoQueryVo);
+
+    boolean approval(Integer id, Integer authStatus);
+
+    boolean lock(Integer id, Integer status);
 }

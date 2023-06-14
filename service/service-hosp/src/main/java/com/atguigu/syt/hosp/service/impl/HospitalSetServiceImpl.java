@@ -1,10 +1,11 @@
 package com.atguigu.syt.hosp.service.impl;
 
+
 import com.atguigu.common.service.exception.GuiguException;
 import com.atguigu.common.util.result.ResultCodeEnum;
-import com.atguigu.syt.hosp.entity.HospitalSet;
 import com.atguigu.syt.hosp.mapper.HospitalSetMapper;
 import com.atguigu.syt.hosp.service.HospitalSetService;
+import com.atguigu.syt.model.hosp.HospitalSet;
 import com.atguigu.syt.vo.hosp.HospitalSetQueryVo;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;

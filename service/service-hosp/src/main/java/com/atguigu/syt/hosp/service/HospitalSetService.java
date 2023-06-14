@@ -1,6 +1,7 @@
 package com.atguigu.syt.hosp.service;
 
-import com.atguigu.syt.hosp.entity.HospitalSet;
+
+import com.atguigu.syt.model.hosp.HospitalSet;
 import com.atguigu.syt.vo.hosp.HospitalSetQueryVo;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
