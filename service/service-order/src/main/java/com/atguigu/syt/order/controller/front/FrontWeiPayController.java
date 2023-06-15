@@ -29,10 +29,32 @@ public class FrontWeiPayController {
     private final WeiPayService weiPayService;
     private final AuthContextHolder authContextHolder;
 
+    /**
+     * return:
+     * author: smile
+     * version: 1.0
+     * description:微信支付 二维码url
+     */
     @GetMapping("/url/{outTradeNo}")
     public Result<?> createNative(@PathVariable String outTradeNo, HttpServletRequest request, HttpServletResponse response) {
         authContextHolder.checkAuth(request, response);
         String url = weiPayService.createNative(outTradeNo);
         return Result.ok(url);
+    }
+    /**
+     * return:
+     * author: smile
+     * version: 1.0
+     * description:查询用户是否支付成功
+     */
+    @GetMapping("/queryPayStatus/{outTradeNo}")
+    public Result<?> queryPayStatus(@PathVariable String outTradeNo, HttpServletRequest request, HttpServletResponse response){
+        authContextHolder.checkAuth(request, response);
+        Boolean flag = weiPayService.queryPayStatus(outTradeNo);
+        if (flag){
+            return Result.ok().message("支付成功");
+        }else{
+            return Result.fail().message("支付中").code(250);
+        }
     }
 }

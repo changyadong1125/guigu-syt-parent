@@ -12,4 +12,6 @@ package com.atguigu.syt.order.service;
  */
 public interface WeiPayService {
     String createNative(String outTradeNo);
+
+    Boolean queryPayStatus(String outTradeNo);
 }

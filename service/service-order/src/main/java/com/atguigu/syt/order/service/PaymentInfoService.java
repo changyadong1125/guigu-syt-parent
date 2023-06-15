@@ -1,8 +1,10 @@
 package com.atguigu.syt.order.service;
 
 
+import com.atguigu.syt.model.order.OrderInfo;
 import com.atguigu.syt.model.order.PaymentInfo;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.wechat.pay.java.service.payments.model.Transaction;
 
 /**
  * <p>
@@ -14,4 +16,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface PaymentInfoService extends IService<PaymentInfo> {
 
+
+    void savaPaymentInfo(Transaction transaction, OrderInfo orderInfo);
 }

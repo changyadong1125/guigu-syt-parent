@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.List;
 
 /**
  * project:guigu-syt-parent
@@ -55,6 +56,20 @@ public class FrontOrderInfoController {
         Long uid = authContextHolder.checkAuth(request, response);
         OrderInfo orderInfo = orderInfoService.getOrderInfo(uid,orderId);
         return Result.ok(orderInfo);
+    }
+
+    /**
+     * return:
+     * author: smile
+     * version: 1.0
+     * description:获取订单列表
+     */
+    @ApiOperation("订单列表")
+    @GetMapping("/list")
+    public Result<List<OrderInfo>> list(HttpServletRequest request, HttpServletResponse response) {
+        Long userId = authContextHolder.checkAuth(request, response);
+        List<OrderInfo> orderInfoList = orderInfoService.selectList(userId);
+        return Result.ok(orderInfoList);
     }
 
 }

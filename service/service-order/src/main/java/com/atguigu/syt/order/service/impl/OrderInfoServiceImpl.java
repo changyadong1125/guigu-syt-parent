@@ -16,6 +16,7 @@ import com.atguigu.syt.order.service.OrderInfoService;
 import com.atguigu.syt.user.client.PatientFeignClient;
 import com.atguigu.syt.vo.hosp.ScheduleOrderVo;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -39,7 +41,7 @@ import java.util.UUID;
 public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo> implements OrderInfoService {
     private final PatientFeignClient patientFeignClient;
     @Resource
-    private  ScheduleFeignClient scheduleFeignClient;
+    private ScheduleFeignClient scheduleFeignClient;
     private final HospSetFeignClient hospSetFeignClient;
 
     @Override
@@ -120,7 +122,7 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
         //保存到数据表
         baseMapper.insert(orderInfo);
 
-        return  orderInfo.getId();
+        return orderInfo.getId();
     }
 
     /**
@@ -135,7 +137,49 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
         orderInfoLambdaQueryWrapper.eq(OrderInfo::getId, orderId);
         orderInfoLambdaQueryWrapper.eq(OrderInfo::getUserId, uid);
         OrderInfo orderInfo = baseMapper.selectOne(orderInfoLambdaQueryWrapper);
-        orderInfo.getParam().put("orderStatusString", OrderStatusEnum.getStatusNameByStatus(orderInfo.getOrderStatus()));
+        packageOrderInfo(orderInfo);
         return orderInfo;
     }
+
+    /**
+     * return:
+     * author: smile
+     * version: 1.0
+     * description:获取订单列表
+     */
+    @Override
+    public List<OrderInfo> selectList(Long userId) {
+        LambdaQueryWrapper<OrderInfo> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(OrderInfo::getUserId, userId);
+        List<OrderInfo> infoList = baseMapper.selectList(queryWrapper);
+        infoList.forEach(this::packageOrderInfo);
+        return infoList;
+    }
+
+    /**
+     * return:
+     * author: smile
+     * version: 1.0
+     * description:更新订单状态
+     */
+    @Override
+    public void updateStatus(String outTradeNo, Integer status) {
+        LambdaUpdateWrapper<OrderInfo> orderInfoLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        orderInfoLambdaUpdateWrapper.eq(OrderInfo::getOutTradeNo, outTradeNo);
+        OrderInfo orderInfo = new OrderInfo();
+        orderInfo.setOrderStatus(status);
+        baseMapper.update(orderInfo, orderInfoLambdaUpdateWrapper);
+    }
+
+
+    /**
+     * return:
+     * author: smile
+     * version: 1.0
+     * description:封装订单数据
+     */
+    private void packageOrderInfo(OrderInfo orderInfo) {
+        orderInfo.getParam().put("orderStatusString", OrderStatusEnum.getStatusNameByStatus(orderInfo.getOrderStatus()));
+    }
+
 }
