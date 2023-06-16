@@ -1,6 +1,5 @@
 package com.atguigu.syt.order.controller.front;
 
-import com.atguigu.common.util.result.Result;
 import com.atguigu.syt.order.service.PaymentInfoService;
 import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
@@ -24,13 +23,4 @@ import org.springframework.web.bind.annotation.RestController;
 public class FrontPaymentInfoController {
     private final PaymentInfoService paymentInfoService;
 
-    /**
-     * return:
-     * author: smile
-     * version: 1.0
-     * description:保存支付信息
-     */
-    public Result<?> savePaymentInfo(){
-        return null;
-    }
 }

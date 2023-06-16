@@ -14,4 +14,6 @@ public interface WeiPayService {
     String createNative(String outTradeNo);
 
     Boolean queryPayStatus(String outTradeNo);
+
+    void refund(String outTradeNo);
 }

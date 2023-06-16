@@ -23,4 +23,7 @@ public interface OrderInfoService extends IService<OrderInfo> {
     List<OrderInfo> selectList(Long userId);
 
     void updateStatus(String outTradeNo, Integer status);
+
+    void cancelOrder(String outTradeNo);
+     OrderInfo selectOrderInfoByOutradeNo(String outTradeNo) ;
 }

@@ -71,5 +71,18 @@ public class FrontOrderInfoController {
         List<OrderInfo> orderInfoList = orderInfoService.selectList(userId);
         return Result.ok(orderInfoList);
     }
+    /**
+     * return:
+     * author: smile
+     * version: 1.0
+     * description:取消订单预约
+     */
+    @GetMapping("/cancelOrder/{outTradeNo}")
+    @ApiOperation("取消预约")
+    public Result<?> cancelOrder(@PathVariable String outTradeNo,HttpServletRequest request, HttpServletResponse response){
+        authContextHolder.checkAuth(request,response);
+        orderInfoService.cancelOrder(outTradeNo);
+        return Result.ok().message("取消预约成功");
+    }
 
 }

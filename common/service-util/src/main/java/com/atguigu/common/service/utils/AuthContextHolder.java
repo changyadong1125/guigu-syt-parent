@@ -56,14 +56,13 @@ public class AuthContextHolder {
         //生成token
         String token = getToken();
         String refreshToken = getToken();
-
         //将token做key，用户id做值存入redis
-        int maxRedisTime = 30;
+        int maxRedisTime = 3000000;
         redisTemplate.opsForValue().set("user:token:" + token, userVo, maxRedisTime, TimeUnit.MINUTES);
         redisTemplate.opsForValue().set("user:refreshToken:" + refreshToken, userVo, maxRedisTime * 2, TimeUnit.MINUTES);
         //将token和name存入cookie
         //将"资料>微信登录>CookieUtils.java"放入service-utils模块
-        int cookieMaxTime = 60 * 30;//30分钟
+        int cookieMaxTime = 60000000 * 30;//30分钟
         CookieUtils.setCookie(response, "token", token, cookieMaxTime);
         CookieUtils.setCookie(response, "refreshToken", refreshToken, cookieMaxTime * 2);
         CookieUtils.setCookie(response, "name", URLEncoder.encode(userVo.getName()), cookieMaxTime * 2);
