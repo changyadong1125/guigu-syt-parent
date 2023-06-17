@@ -7,6 +7,8 @@ import com.atguigu.syt.model.order.OrderInfo;
 import com.atguigu.syt.model.order.PaymentInfo;
 import com.atguigu.syt.order.mapper.PaymentInfoMapper;
 import com.atguigu.syt.order.service.PaymentInfoService;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.wechat.pay.java.service.payments.model.Transaction;
 import lombok.RequiredArgsConstructor;
@@ -41,10 +43,37 @@ public class PaymentInfoServiceImpl extends ServiceImpl<PaymentInfoMapper, Payme
         paymentInfo.setPaymentType(PaymentTypeEnum.WEIXIN.getStatus());
         paymentInfo.setTradeNo(transaction.getOutTradeNo());
         paymentInfo.setTotalAmount(new BigDecimal(transaction.getAmount().getTotal()));
-        paymentInfo.setSubject(orderInfo.getTitle());
+        paymentInfo.setSubject("救命钱");
         paymentInfo.setPaymentStatus(PaymentStatusEnum.PAID.getStatus());
         paymentInfo.setCallbackTime(new Date());
         paymentInfo.setCallbackContent(transaction.toString());
         baseMapper.insert(paymentInfo);
+    }
+    /**
+     * return:
+     * author: smile
+     * version: 1.0
+     * description:更新订单状态
+     */
+    @Override
+    public void updateStatus(String outTradeNo, Integer status) {
+        LambdaUpdateWrapper<PaymentInfo> orderInfoLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        orderInfoLambdaUpdateWrapper.eq(PaymentInfo::getOutTradeNo, outTradeNo);
+        PaymentInfo paymentInfo = new PaymentInfo();
+        paymentInfo.setPaymentStatus(status);
+        baseMapper.update(paymentInfo, orderInfoLambdaUpdateWrapper);
+    }
+
+    /**
+     * return:
+     * author: smile
+     * version: 1.0
+     * description:获取账单状态
+     */
+    @Override
+    public Integer getPaymentInfoStatus(String outTradeNo) {
+        LambdaQueryWrapper<PaymentInfo> paymentInfoLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        paymentInfoLambdaQueryWrapper.eq(PaymentInfo::getOutTradeNo, outTradeNo);
+        return baseMapper.selectOne(paymentInfoLambdaQueryWrapper).getPaymentStatus();
     }
 }

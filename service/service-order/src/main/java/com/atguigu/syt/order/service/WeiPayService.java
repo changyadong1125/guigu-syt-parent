@@ -13,7 +13,7 @@ package com.atguigu.syt.order.service;
 public interface WeiPayService {
     String createNative(String outTradeNo);
 
-    Boolean queryPayStatus(String outTradeNo);
+    Boolean queryPayStatus(String outTradeNo,Long uid);
 
-    void refund(String outTradeNo);
+    void refund(String outTradeNo,Long uid);
 }

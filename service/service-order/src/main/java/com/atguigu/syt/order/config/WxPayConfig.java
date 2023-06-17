@@ -1,4 +1,4 @@
-package com.atguigu.syt.order.controller.config;
+package com.atguigu.syt.order.config;
 
 import com.wechat.pay.java.core.RSAAutoCertificateConfig;
 import lombok.Data;

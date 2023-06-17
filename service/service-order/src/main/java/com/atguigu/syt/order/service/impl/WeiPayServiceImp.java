@@ -8,7 +8,7 @@ import com.atguigu.syt.enums.OrderStatusEnum;
 import com.atguigu.syt.hosp.client.HospSetFeignClient;
 import com.atguigu.syt.model.hosp.HospitalSet;
 import com.atguigu.syt.model.order.OrderInfo;
-import com.atguigu.syt.order.controller.config.WxPayConfig;
+import com.atguigu.syt.order.config.WxPayConfig;
 import com.atguigu.syt.order.service.OrderInfoService;
 import com.atguigu.syt.order.service.PaymentInfoService;
 import com.atguigu.syt.order.service.RefundInfoService;
@@ -28,7 +28,9 @@ import com.wechat.pay.java.service.refund.model.AmountReq;
 import com.wechat.pay.java.service.refund.model.CreateRequest;
 import com.wechat.pay.java.service.refund.model.Refund;
 import com.wechat.pay.java.service.refund.model.Status;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
@@ -45,6 +47,8 @@ import java.util.Map;
  * @Description:
  */
 @Service
+@Slf4j
+
 public class WeiPayServiceImp implements WeiPayService {
     @Resource
     private WxPayConfig wxPayConfig;
@@ -75,7 +79,6 @@ public class WeiPayServiceImp implements WeiPayService {
         amount.setTotal(1);
         amount.setCurrency("CNY");
         request.setAmount(amount);
-
         request.setAppid(wxPayConfig.getAppid());
         request.setMchid(wxPayConfig.getMchId());
         request.setDescription("挂号费");
@@ -88,37 +91,41 @@ public class WeiPayServiceImp implements WeiPayService {
         return response.getCodeUrl();
     }
 
+    /**
+     * return:
+     * author: smile
+     * version: 1.0
+     * description:查询支付状态
+     */
+    @Transactional
     @Override
-    public Boolean queryPayStatus(String outTradeNo) {
-        // 构建service
-        NativePayService service = new NativePayService.Builder().config(wxPayConfig.getConfig()).build();
+    public Boolean queryPayStatus(String outTradeNo,Long uid) {
 
+        try {
+            QueryOrderByOutTradeNoRequest queryRequest = new QueryOrderByOutTradeNoRequest();
+            queryRequest.setOutTradeNo(outTradeNo);
+            queryRequest.setMchid(wxPayConfig.getMchId());
 
-        QueryOrderByOutTradeNoRequest queryRequest = new QueryOrderByOutTradeNoRequest();
-        // 调用request.setXxx(val)设置所需参数，具体参数可见Request定义
-        queryRequest.setOutTradeNo(outTradeNo);
-        queryRequest.setMchid(wxPayConfig.getMchId());
+            NativePayService service = new NativePayService.Builder().config(wxPayConfig.getConfig()).build();
+            Transaction transaction = service.queryOrderByOutTradeNo(queryRequest);
+            Transaction.TradeStateEnum tradeState = transaction.getTradeState();
 
-        QueryOrderByOutTradeNoRequest request = new QueryOrderByOutTradeNoRequest();
-        // 调用request.setXxx(val)设置所需参数，具体参数可见Request定义
-        request.setOutTradeNo(outTradeNo);
-        request.setMchid(wxPayConfig.getMchId());
-
-        Transaction result = service.queryOrderByOutTradeNo(queryRequest);
-        Transaction.TradeStateEnum tradeState = result.getTradeState();
-        // 调用接口
-        Transaction transaction = service.queryOrderByOutTradeNo(request);
-        //支付成功
-        if (Transaction.TradeStateEnum.SUCCESS.equals(tradeState)) {
-            OrderInfo orderInfo = orderInfoService.selectOrderInfoByOutradeNo(outTradeNo);
-            //处理支付成功后重复查单
-            //保证接口调用的幂等性：无论接口被调用多少次，产生的结果是一致的
-            Integer orderStatus = orderInfo.getOrderStatus();
-            if (OrderStatusEnum.UNPAID.getStatus().intValue() != orderStatus.intValue()) {
-                return true;//支付成功、关单、。。。
+            if (Transaction.TradeStateEnum.SUCCESS.equals(tradeState)) {
+                OrderInfo orderInfo = orderInfoService.selectOrderInfoByOutradeNo(outTradeNo,uid);
+                Integer orderStatus = orderInfo.getOrderStatus();
+                if (OrderStatusEnum.UNPAID.getStatus().intValue() != orderStatus.intValue()) return true;
+                this.wxPaySuccess(transaction, orderInfo);
+                return true;
             }
-            this.wxPaySuccess(transaction, outTradeNo);
-            return true;
+        } catch (HttpException e) {
+            log.error(e.getHttpRequest().toString());
+            throw new GuiguException(ResultCodeEnum.FAIL);
+        } catch (ServiceException e) {
+            log.error(e.getResponseBody());
+            throw new GuiguException(ResultCodeEnum.FAIL);
+        } catch (MalformedMessageException e) {
+            log.error(e.getMessage());
+            throw new GuiguException(ResultCodeEnum.FAIL);
         }
         return false;
     }
@@ -130,7 +137,7 @@ public class WeiPayServiceImp implements WeiPayService {
      * description:微信退款
      */
     @Override
-    public void refund(String outTradeNo) {
+    public void refund(String outTradeNo,Long uid) {
         RSAAutoCertificateConfig rsaAutoCertificateConfig = wxPayConfig.getConfig();
         // 初始化服务
         RefundService service = new RefundService.Builder().config(rsaAutoCertificateConfig).build();
@@ -139,12 +146,13 @@ public class WeiPayServiceImp implements WeiPayService {
         try {
 
             //获取订单
-            OrderInfo orderInfo = orderInfoService.selectOrderInfoByOutradeNo(outTradeNo);
+            OrderInfo orderInfo = orderInfoService.selectOrderInfoByOutradeNo(outTradeNo,uid);
 
             CreateRequest request = new CreateRequest();
             // 调用request.setXxx(val)设置所需参数，具体参数可见Request定义
             request.setOutTradeNo(outTradeNo);
             request.setOutRefundNo("TK_" + outTradeNo);
+            request.setNotifyUrl(wxPayConfig.getNotifyRefundUrl());
             AmountReq amount = new AmountReq();
             //amount.setTotal(orderInfo.getAmount().multiply(new BigDecimal(100)).intValue());
             amount.setTotal(1L);//1分钱
@@ -160,42 +168,22 @@ public class WeiPayServiceImp implements WeiPayService {
             //            CLOSED：退款关闭
             //            PROCESSING：退款处理中
             //            ABNORMAL：退款异常
-            if(Status.CLOSED.equals(status)){
+            if (Status.CLOSED.equals(status)) {
 
                 throw new GuiguException(ResultCodeEnum.FAIL.getCode(), "退款已关闭，无法退款");
 
-            }else if(Status.ABNORMAL.equals(status)){
+            } else if (Status.ABNORMAL.equals(status)) {
 
                 throw new GuiguException(ResultCodeEnum.FAIL.getCode(), "退款异常");
 
-            } else{
+            } else {
                 //SUCCESS：退款成功（退款申请成功） || PROCESSING：退款处理中
                 //记录支退款日志
                 refundInfoService.saveRefundInfo(orderInfo, response);
             }
-
-        } catch (HttpException e) { // 发送HTTP请求失败
-            // 调用e.getHttpRequest()获取请求打印日志或上报监控，更多方法见HttpException定义
-            throw new GuiguException(ResultCodeEnum.FAIL);
-        } catch (ServiceException e) { // 服务返回状态小于200或大于等于300，例如500
-            // 调用e.getResponseBody()获取返回体打印日志或上报监控，更多方法见ServiceException定义
-            throw new GuiguException(ResultCodeEnum.FAIL);
-        } catch (MalformedMessageException e) { // 服务返回成功，返回体类型不合法，或者解析返回体失败
-            // 调用e.getMessage()获取信息打印日志或上报监控，更多方法见MalformedMessageException定义
+        } catch (HttpException | ServiceException | MalformedMessageException e) {
             throw new GuiguException(ResultCodeEnum.FAIL);
         }
-
-
-
-
-
-
-
-
-
-
-
-
     }
 
     /**
@@ -204,17 +192,13 @@ public class WeiPayServiceImp implements WeiPayService {
      * version: 1.0
      * description:支付成功 保存订单信息
      */
-    private void wxPaySuccess(Transaction transaction, String outTradeNo) {
-        OrderInfo orderInfo = orderInfoService.selectOrderInfoByOutradeNo(outTradeNo);
+    private void wxPaySuccess(Transaction transaction, OrderInfo orderInfo) {
         //更新订单状态
-        orderInfoService.updateStatus(outTradeNo, OrderStatusEnum.PAID.getStatus());
-
+        orderInfoService.updateStatus(orderInfo.getOutTradeNo(), OrderStatusEnum.PAID.getStatus());
         //保存支付信息
         paymentInfoService.savaPaymentInfo(transaction, orderInfo);
-
         //通知医院修改订单状态
         HospitalSet hospitalSet = hospSetFeignClient.getHospitalSet(orderInfo.getHoscode());
-
         Map<String, Object> map = new HashMap<>();
         map.put("hoscode", hospitalSet.getHoscode());
         map.put("hosOrderId", orderInfo.getHosOrderId());

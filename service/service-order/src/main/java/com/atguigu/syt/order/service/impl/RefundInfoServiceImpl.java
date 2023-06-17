@@ -7,6 +7,7 @@ import com.atguigu.syt.model.order.OrderInfo;
 import com.atguigu.syt.model.order.RefundInfo;
 import com.atguigu.syt.order.mapper.RefundInfoMapper;
 import com.atguigu.syt.order.service.RefundInfoService;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.wechat.pay.java.service.refund.model.Refund;
 import org.springframework.stereotype.Service;
@@ -41,5 +42,14 @@ public class RefundInfoServiceImpl extends ServiceImpl<RefundInfoMapper, RefundI
         refundInfo.setSubject(orderInfo.getTitle());
         refundInfo.setRefundStatus(RefundStatusEnum.UNREFUND.getStatus());//退款中
         baseMapper.insert(refundInfo);
+    }
+
+    @Override
+    public void updateRefundInfoStatus(String outTradeNo, RefundStatusEnum refund) {
+        LambdaUpdateWrapper<RefundInfo> refundInfoLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        refundInfoLambdaUpdateWrapper.eq(RefundInfo::getOutTradeNo,outTradeNo);
+        RefundInfo refundInfo = new RefundInfo();
+        refundInfo.setRefundStatus(refund.getStatus());
+        baseMapper.update(refundInfo,refundInfoLambdaUpdateWrapper);
     }
 }

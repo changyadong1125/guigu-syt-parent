@@ -18,4 +18,8 @@ public interface PaymentInfoService extends IService<PaymentInfo> {
 
 
     void savaPaymentInfo(Transaction transaction, OrderInfo orderInfo);
+
+    void updateStatus(String outTradeNo, Integer status);
+
+    Integer getPaymentInfoStatus(String outTradeNo);
 }

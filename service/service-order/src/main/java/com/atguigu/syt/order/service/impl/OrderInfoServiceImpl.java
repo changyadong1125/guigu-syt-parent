@@ -42,7 +42,7 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
     private final ScheduleFeignClient scheduleFeignClient;
     private final HospSetFeignClient hospSetFeignClient;
     @Resource
-    private  WeiPayService weiPayService;
+    private WeiPayService weiPayService;
 
     /**
      * return:
@@ -182,15 +182,20 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
      * description:取消预约订单
      */
     @Override
-    public void cancelOrder(String outTradeNo) {
-        LambdaQueryWrapper<OrderInfo> orderInfoLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        orderInfoLambdaQueryWrapper.eq(OrderInfo::getOutTradeNo, outTradeNo);
-        OrderInfo orderInfo = baseMapper.selectOne(orderInfoLambdaQueryWrapper);
+    public void cancelOrder(String outTradeNo,Long uid) {
+
+        OrderInfo orderInfo = selectOrderInfoByOutradeNo(outTradeNo, uid);
+
         if (orderInfo == null) throw new GuiguException(ResultCodeEnum.PARAM_ERROR);
+
         Integer orderStatus = orderInfo.getOrderStatus();
         if (OrderStatusEnum.PAID.getStatus().equals(orderStatus))
             this.cancelOrderWM(orderInfo, OrderStatusEnum.CANCLE_UNREFUND.getStatus());
         else cancelOrderNM(orderInfo, OrderStatusEnum.CANCLE.getStatus());
+
+        //更新平台剩余可预约数 给用户发短信提示预约成功
+
+        //todo：
     }
 
     /**
@@ -200,13 +205,15 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
      * description:未支付取消订单
      */
     private void cancelOrderNM(OrderInfo orderInfo, Integer orderStatus) {
-        /*
-        判断预约成功后是否及时支付   及时支付则保存订单 否则删除订单
-        未支付取消订单 判断是否在可取消范围内
-         */
+
+        //判断当前时间是否超过可退好时间
+        Date quitTime = orderInfo.getQuitTime();
+        if (new DateTime(quitTime).isBeforeNow()) {
+            throw new GuiguException(ResultCodeEnum.CANCEL_ORDER_NO);
+        }
         orderInfo.setOrderStatus(orderStatus);
-        baseMapper.updateById(orderInfo);
         updateByHospital(orderInfo);
+        baseMapper.updateById(orderInfo);
     }
 
     /**
@@ -216,15 +223,10 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
      * description:已支付取消订单
      */
     private void cancelOrderWM(OrderInfo orderInfo, Integer orderStatus) {
-        //判断当前时间是否超过可退好时间
-        Date quitTime = orderInfo.getQuitTime();
-        if (new DateTime(quitTime).isBeforeNow()) {
-            throw new GuiguException(ResultCodeEnum.CANCEL_ORDER_NO);
-        }
+        //微信退款
+        weiPayService.refund(orderInfo.getOutTradeNo(),orderInfo.getUserId());
         //取消预约
         this.cancelOrderNM(orderInfo, orderStatus);
-        //微信退款
-        weiPayService.refund(orderInfo.getOutTradeNo());
     }
 
     /**
@@ -234,7 +236,6 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
      * description:通知第三方医院修改订单状态
      */
     private void updateByHospital(OrderInfo orderInfo) {
-        //通知医院修改订单状态
         HospitalSet hospitalSet = hospSetFeignClient.getHospitalSet(orderInfo.getHoscode());
         Map<String, Object> map = new HashMap<>();
         map.put("hoscode", hospitalSet.getHoscode());
@@ -243,13 +244,11 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
         map.put("hosScheduleId", orderInfo.getHosScheduleId());
         map.put("sign", HttpRequestHelper.getSign(map, hospitalSet.getSignKey()));
         JSONObject response = HttpRequestHelper.sendRequest(map, hospitalSet.getApiUrl() + "/order/updateCancelStatus");
-        //解析响应
         if (response.getInteger("code") != 200) {
+            log.error("查单失败，"+ "code：" + response.getInteger("code") + "，message：" + response.getString("message"));
             throw new GuiguException(ResultCodeEnum.CANCEL_ORDER_FAIL);
         }
     }
-
-
     /**
      * return:
      * author: smile
@@ -266,10 +265,10 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
      * version: 1.0
      * description:根据订单号查询到订单信息
      */
-    public OrderInfo selectOrderInfoByOutradeNo(String outTradeNo) {
+    public OrderInfo selectOrderInfoByOutradeNo(String outTradeNo,Long uid) {
         LambdaQueryWrapper<OrderInfo> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(OrderInfo::getOutTradeNo, outTradeNo);
+        queryWrapper.eq(OrderInfo::getUserId, uid);
         return this.getOne(queryWrapper);
     }
-
 }

@@ -18,6 +18,11 @@
     </properties>
 
     <dependencies>
+        <!--包含了sleuth+zipkin-->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-zipkin</artifactId>
+        </dependency>
         <!--自定义工具-->
         <dependency>
             <groupId>com.atguigu</groupId>

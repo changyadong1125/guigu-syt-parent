@@ -11,3 +11,10 @@ spring:
         max-wait: -1    #最大阻塞等待时间(负数表示没限制)
         max-idle: 5    #最大空闲
         min-idle: 0     #最小空闲
+  zipkin:
+    base-url: http://localhost:9411
+    sleuth:
+      sampler:
+        probability: 1
+
+

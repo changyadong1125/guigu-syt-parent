@@ -5,6 +5,7 @@ import com.atguigu.common.util.result.Result;
 import com.atguigu.syt.model.order.OrderInfo;
 import com.atguigu.syt.order.service.OrderInfoService;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -52,6 +53,7 @@ public class FrontOrderInfoController {
      */
     @GetMapping("/info/{orderId}")
     @ApiOperation("获取订单详情")
+    @ApiImplicitParam(name = "orderId",value = "订单id",required = true)
     public Result<?> getOrderInfo(@PathVariable Long orderId, HttpServletResponse response, HttpServletRequest request) {
         Long uid = authContextHolder.checkAuth(request, response);
         OrderInfo orderInfo = orderInfoService.getOrderInfo(uid,orderId);
@@ -79,9 +81,10 @@ public class FrontOrderInfoController {
      */
     @GetMapping("/cancelOrder/{outTradeNo}")
     @ApiOperation("取消预约")
+    @ApiImplicitParam(name = "outTradeNo",value = "商户订单号",required = true)
     public Result<?> cancelOrder(@PathVariable String outTradeNo,HttpServletRequest request, HttpServletResponse response){
-        authContextHolder.checkAuth(request,response);
-        orderInfoService.cancelOrder(outTradeNo);
+        Long uid = authContextHolder.checkAuth(request, response);
+        orderInfoService.cancelOrder(outTradeNo,uid);
         return Result.ok().message("取消预约成功");
     }
 
