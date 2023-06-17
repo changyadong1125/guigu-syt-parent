@@ -33,6 +33,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -148,6 +149,7 @@ public class WeiPayServiceImp implements WeiPayService {
             //获取订单
             OrderInfo orderInfo = orderInfoService.selectOrderInfoByOutradeNo(outTradeNo,uid);
 
+
             CreateRequest request = new CreateRequest();
             // 调用request.setXxx(val)设置所需参数，具体参数可见Request定义
             request.setOutTradeNo(outTradeNo);
@@ -156,7 +158,7 @@ public class WeiPayServiceImp implements WeiPayService {
             AmountReq amount = new AmountReq();
             //amount.setTotal(orderInfo.getAmount().multiply(new BigDecimal(100)).intValue());
             amount.setTotal(1L);//1分钱
-            amount.setRefund(1L);
+            amount.setRefund(orderInfo.getAmount().multiply(new BigDecimal("0.01")).longValue());
             amount.setCurrency("CNY");
             request.setAmount(amount);
             // 调用接口

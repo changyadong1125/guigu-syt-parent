@@ -172,6 +172,7 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
         orderInfoLambdaUpdateWrapper.eq(OrderInfo::getOutTradeNo, outTradeNo);
         OrderInfo orderInfo = new OrderInfo();
         orderInfo.setOrderStatus(status);
+        orderInfo.setUpdateTime(new Date());
         baseMapper.update(orderInfo, orderInfoLambdaUpdateWrapper);
     }
 

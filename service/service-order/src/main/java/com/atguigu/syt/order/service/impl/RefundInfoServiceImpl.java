@@ -13,6 +13,7 @@ import com.wechat.pay.java.service.refund.model.Refund;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.Date;
 
 /**
  * <p>
@@ -50,6 +51,7 @@ public class RefundInfoServiceImpl extends ServiceImpl<RefundInfoMapper, RefundI
         refundInfoLambdaUpdateWrapper.eq(RefundInfo::getOutTradeNo,outTradeNo);
         RefundInfo refundInfo = new RefundInfo();
         refundInfo.setRefundStatus(refund.getStatus());
+        refundInfo.setCallbackTime(new Date());
         baseMapper.update(refundInfo,refundInfoLambdaUpdateWrapper);
     }
 }

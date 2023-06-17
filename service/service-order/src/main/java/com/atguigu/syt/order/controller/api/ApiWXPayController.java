@@ -1,11 +1,10 @@
 package com.atguigu.syt.order.controller.api;
 
-import com.alibaba.fastjson.JSONObject;
-import com.atguigu.common.service.exception.GuiguException;
-import com.atguigu.common.util.result.ResultCodeEnum;
+import com.atguigu.syt.enums.OrderStatusEnum;
 import com.atguigu.syt.enums.PaymentStatusEnum;
 import com.atguigu.syt.enums.RefundStatusEnum;
 import com.atguigu.syt.order.config.WxPayConfig;
+import com.atguigu.syt.order.service.OrderInfoService;
 import com.atguigu.syt.order.service.PaymentInfoService;
 import com.atguigu.syt.order.service.RefundInfoService;
 import com.atguigu.syt.order.utils.RequestUtils;
@@ -45,11 +44,12 @@ public class ApiWXPayController {
     private WxPayConfig wxPayConfig;
     @Resource
     private RefundInfoService refundInfoService;
+    @Resource
+    private OrderInfoService orderInfoService;
 
 
     @PostMapping("/refunds/notify")
-    public String callback(HttpServletRequest request, HttpServletResponse response) {
-
+    public Map<String,String> callback(HttpServletRequest request, HttpServletResponse response) {
 
         Map<String, String> map = new HashMap<>();
         try {
@@ -66,16 +66,6 @@ public class ApiWXPayController {
                     .timestamp(timestamp)
                     .body(requestBody)
                     .build();
-
-//            // 如果已经初始化了 RSAAutoCertificateConfig，可直接使用
-//            // 没有的话，则构造一个
-//            NotificationConfig config = new RSAAutoCertificateConfig.Builder()
-//                    .merchantId(wxPayConfig.getMchId())
-//                    .privateKeyFromPath(wxPayConfig.getPrivateKeyPath())
-//                    .merchantSerialNumber(wxPayConfig.getMchSerialNo())
-//                    .apiV3Key(wxPayConfig.getApiV3Key())
-//                    .build();
-
             // 初始化 NotificationParser
             NotificationParser parser = new NotificationParser(wxPayConfig.getConfig());
 
@@ -87,29 +77,29 @@ public class ApiWXPayController {
 
             if (paymentInfoService.getPaymentInfoStatus(outTradeNo).equals(PaymentStatusEnum.REFUND.getStatus())) {
                 response.setStatus(200);
-                map.put("code", "SUCCESS");
-                return JSONObject.toJSONString(map);
+                return map;
             }
-
             if (refundNotification.getRefundStatus().toString().equals("SUCCESS")) {
-                //修改退款状态
+                //修改退款记录状态
                 refundInfoService.updateRefundInfoStatus(outTradeNo, RefundStatusEnum.REFUND);
-                //修改订单状态
+                //修改支付订单状态
                 paymentInfoService.updateStatus(outTradeNo, PaymentStatusEnum.REFUND.getStatus());
+                //修改订单状态
+                orderInfoService.updateStatus(outTradeNo, OrderStatusEnum.CANCLE_REFUND.getStatus());
+                response.setStatus(200);
+                map.put("code", "SUCCESS");
             } else {
-                throw new GuiguException(ResultCodeEnum.ILLEGAL_CALLBACK_REQUEST_ERROR);
+                response.setStatus(500);
+                map.put("code", "ERROR");
+                map.put("message", "系统错误");
             }
-
-            response.setStatus(200);
-            map.put("code", "SUCCESS");
-            return JSONObject.toJSONString(map);
+            return map;
         } catch (Exception e) {
             log.error(e.getMessage());
             response.setStatus(500);
             map.put("code", "ERROR");
             map.put("message", "系统错误");
-            return JSONObject.toJSONString(map);
+            return map;
         }
     }
-
 }

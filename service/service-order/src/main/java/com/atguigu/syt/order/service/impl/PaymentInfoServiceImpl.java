@@ -61,6 +61,7 @@ public class PaymentInfoServiceImpl extends ServiceImpl<PaymentInfoMapper, Payme
         orderInfoLambdaUpdateWrapper.eq(PaymentInfo::getOutTradeNo, outTradeNo);
         PaymentInfo paymentInfo = new PaymentInfo();
         paymentInfo.setPaymentStatus(status);
+        paymentInfo.setCallbackTime(new Date());
         baseMapper.update(paymentInfo, orderInfoLambdaUpdateWrapper);
     }
 
