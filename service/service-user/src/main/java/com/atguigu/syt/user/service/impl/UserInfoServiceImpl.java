@@ -1,6 +1,8 @@
 package com.atguigu.syt.user.service.impl;
 
 
+import com.atguigu.common.service.exception.GuiguException;
+import com.atguigu.common.util.result.ResultCodeEnum;
 import com.atguigu.syt.cmn.client.DictFeignClient;
 import com.atguigu.syt.enums.AuthStatusEnum;
 import com.atguigu.syt.enums.DictTypeEnum;
@@ -16,9 +18,12 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import javax.annotation.Resource;
+import java.util.Date;
 import java.util.Objects;
 
 /**
@@ -33,7 +38,10 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> implements UserInfoService {
     private final DictFeignClient dictFeignClient;
+
     private final FileFeignClient fileFeignClient;
+    @Resource
+    private  RedisTemplate<String, String> redisTemplate;
 
     /**
      * return:
@@ -130,6 +138,41 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
      * return:
      * author: smile
      * version: 1.0
+     * description:绑定手机号
+     */
+    @Override
+    public void bindPhone(String phone, String code, Long uid) {
+        //对手机号和验证码做非空判断
+        if (StringUtils.isEmpty(phone) || StringUtils.isEmpty(code)) {
+            throw new GuiguException(ResultCodeEnum.PARAM_ERROR);
+        }
+        // 用手机号去redis中查询 redis中存储的验证码  和 前端用户输入的验证码作比较
+        String codeForRedis = redisTemplate.opsForValue().get("code:" + phone);
+
+        //不成功的话 抛出异常
+        if (!code.equals(codeForRedis)) {
+            throw new GuiguException(ResultCodeEnum.CODE_ERROR);
+        }
+        //匹配成功的话 判读该手机号是否杯别人绑定
+        LambdaQueryWrapper<UserInfo> userInfoLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        userInfoLambdaQueryWrapper.eq(UserInfo::getPhone, phone).ne(UserInfo::getId, uid);
+        UserInfo userInfo = baseMapper.selectOne(userInfoLambdaQueryWrapper);
+        //被别人绑定返回提示信息 抛出异常
+        if (userInfo != null) {
+            throw new GuiguException(ResultCodeEnum.REGISTER_MOBILE_ERROR);
+        }
+        //如果没有被别人绑定进行绑定
+        userInfo = new UserInfo();
+        userInfo.setPhone(phone);
+        userInfo.setId(uid);
+        userInfo.setUpdateTime(new Date());
+        baseMapper.updateById(userInfo);
+    }
+
+    /**
+     * return:
+     * author: smile
+     * version: 1.0
      * description:封装用户信息
      */
     private void packageUserInfo(UserInfo userInfo) {
@@ -141,7 +184,6 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
             String previewUrl = fileFeignClient.getPreviewUrl(userInfo.getCertificatesUrl());
             userInfo.getParam().put("previewUrl", previewUrl);
         }
-
         userInfo.getParam().put("authStatusString", AuthStatusEnum.getStatusNameByStatus(userInfo.getAuthStatus()));
         userInfo.getParam().put("statusString", UserStatusEnum.getStatusNameByStatus(userInfo.getStatus()));
     }

@@ -28,4 +28,6 @@ public interface UserInfoService extends IService<UserInfo> {
     boolean approval(Integer id, Integer authStatus);
 
     boolean lock(Integer id, Integer status);
+
+    void bindPhone(String phone, String code,Long uid);
 }

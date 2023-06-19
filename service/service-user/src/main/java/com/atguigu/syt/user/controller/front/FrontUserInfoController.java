@@ -44,11 +44,12 @@ public class FrontUserInfoController {
     @ApiOperation(value = "用户认证")
     @ApiImplicitParam(name = "userAuthVo", value = "用户实名认证对象", required = true)
     @PutMapping("/auth")
-    public Result<?> userAuth(@RequestBody UserAuthVo userAuthVo, HttpServletRequest request,HttpServletResponse response) {
-        Long uid = authContextHolder.checkAuth(request,response);
-        boolean flag = userInfoService.updateUserInfo(uid,userAuthVo);
+    public Result<?> userAuth(@RequestBody UserAuthVo userAuthVo, HttpServletRequest request, HttpServletResponse response) {
+        Long uid = authContextHolder.checkAuth(request, response);
+        boolean flag = userInfoService.updateUserInfo(uid, userAuthVo);
         return flag ? Result.ok() : Result.fail();
     }
+
     /**
      * return:
      * author: smile
@@ -57,9 +58,17 @@ public class FrontUserInfoController {
      */
     @GetMapping("/getUserAuthInfo")
     @ApiOperation("获取用户认证信息")
-    public Result<?> getAuthUserInfo(HttpServletRequest request, HttpServletResponse response){
-        Long aLong = authContextHolder.checkAuth(request,response);
+    public Result<?> getAuthUserInfo(HttpServletRequest request, HttpServletResponse response) {
+        Long aLong = authContextHolder.checkAuth(request, response);
         UserInfo userInfo = userInfoService.getAuthUserInfo(aLong);
         return Result.ok(userInfo);
+    }
+
+    @PutMapping("/bind/{phone}/{code}")
+    @ApiOperation("绑定手机号")
+    public Result<?> bindPhone(@PathVariable String phone, @PathVariable String code, HttpServletRequest request, HttpServletResponse response) {
+        Long uid = authContextHolder.checkAuth(request, response);
+        userInfoService.bindPhone(phone, code,uid);
+        return Result.ok();
     }
 }
