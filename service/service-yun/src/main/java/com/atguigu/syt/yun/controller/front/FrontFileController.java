@@ -27,7 +27,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/front/yun/file")
-@Api("用户文件上传接口")
+@Api(tags = "用户文件上传接口")
 public class FrontFileController {
     @Resource
     private FileService fileService;
@@ -41,7 +41,7 @@ public class FrontFileController {
      * description:文件上传
      */
     @ApiOperation("文件上传")
-    @PostMapping("/upload")
+    @PostMapping(value = "/upload")
     public Result<?> upload(MultipartFile file, HttpServletRequest request, HttpServletResponse response) {
         authContextHolder.checkAuth(request,response);
         Map<String, String> map = fileService.upload(file);

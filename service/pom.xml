@@ -28,6 +28,8 @@
 
     <dependencies>
 
+
+
         <dependency>
             <groupId>com.atguigu</groupId>
             <artifactId>service-user-client</artifactId>

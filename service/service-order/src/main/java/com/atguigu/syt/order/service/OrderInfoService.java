@@ -26,4 +26,6 @@ public interface OrderInfoService extends IService<OrderInfo> {
 
     void cancelOrder(String outTradeNo,Long uid);
      OrderInfo selectOrderInfoByOutradeNo(String outTradeNo,Long uid) ;
+
+    void remind();
 }

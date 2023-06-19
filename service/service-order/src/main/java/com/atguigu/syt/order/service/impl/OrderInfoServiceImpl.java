@@ -4,6 +4,7 @@ package com.atguigu.syt.order.service.impl;
 import com.alibaba.fastjson.JSONObject;
 import com.atguigu.common.service.exception.GuiguException;
 import com.atguigu.common.service.utils.HttpRequestHelper;
+import com.atguigu.common.service.utils.RandomUtil;
 import com.atguigu.common.util.result.ResultCodeEnum;
 import com.atguigu.syt.enums.OrderStatusEnum;
 import com.atguigu.syt.hosp.client.HospSetFeignClient;
@@ -14,13 +15,17 @@ import com.atguigu.syt.model.user.Patient;
 import com.atguigu.syt.order.mapper.OrderInfoMapper;
 import com.atguigu.syt.order.service.OrderInfoService;
 import com.atguigu.syt.order.service.WeiPayService;
+import com.atguigu.syt.rabbit.config.MQConst;
 import com.atguigu.syt.user.client.PatientFeignClient;
 import com.atguigu.syt.vo.hosp.ScheduleOrderVo;
+import com.atguigu.syt.vo.order.OrderMqVo;
+import com.atguigu.syt.vo.sms.SmsVo;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.joda.time.DateTime;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
@@ -43,6 +48,8 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
     private final HospSetFeignClient hospSetFeignClient;
     @Resource
     private WeiPayService weiPayService;
+    @Resource
+    private RabbitTemplate rabbitTemplate;
 
     /**
      * return:
@@ -103,10 +110,6 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
         String fetchTime = data.getString("fetchTime");
         String fetchAddress = data.getString("fetchAddress");
 
-        //更新平台上该医生的剩余可预约数
-        Integer reservedNumber = data.getInteger("reservedNumber");
-        Integer availableNumber = data.getInteger("availableNumber");
-
         BeanUtils.copyProperties(scheduleOrderVo, orderInfo);
         String outTradeNo = UUID.randomUUID().toString().replaceAll("-", "");
         orderInfo.setOutTradeNo(outTradeNo);
@@ -125,6 +128,24 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
 
         //保存到数据表
         baseMapper.insert(orderInfo);
+        //更新平台上该医生的剩余可预约数
+        Integer reservedNumber = data.getInteger("reservedNumber");
+        Integer availableNumber = data.getInteger("availableNumber");
+        OrderMqVo orderMqVo = new OrderMqVo();
+        orderMqVo.setScheduleId(scheduleId);
+        orderMqVo.setReservedNumber(reservedNumber);
+        orderMqVo.setAvailableNumber(availableNumber);
+        //往交换机发送消息
+        rabbitTemplate.convertAndSend(MQConst.EXCHANGE_DIRECT_ORDER, MQConst.ROUTING_KEY_ORDER, orderMqVo);
+        //给就诊人发送短信提示
+        SmsVo smsVo = new SmsVo();
+        smsVo.setPhone(orderInfo.getPatientPhone());
+        smsVo.setTemplateCode("CST_ptdie100");
+        Map<String, Object> smsMap = new HashMap<>();
+        String fourBitRandom = RandomUtil.getFourBitRandom();
+        smsMap.put("number",fourBitRandom);
+        smsVo.setParam(smsMap);
+        rabbitTemplate.convertAndSend(MQConst.EXCHANGE_DIRECT_SMS,MQConst.ROUTING_KEY_SMS,smsVo);
 
         return orderInfo.getId();
     }
@@ -183,7 +204,7 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
      * description:取消预约订单
      */
     @Override
-    public void cancelOrder(String outTradeNo,Long uid) {
+    public void cancelOrder(String outTradeNo, Long uid) {
 
         OrderInfo orderInfo = selectOrderInfoByOutradeNo(outTradeNo, uid);
 
@@ -193,10 +214,6 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
         if (OrderStatusEnum.PAID.getStatus().equals(orderStatus))
             this.cancelOrderWM(orderInfo, OrderStatusEnum.CANCLE_UNREFUND.getStatus());
         else cancelOrderNM(orderInfo, OrderStatusEnum.CANCLE.getStatus());
-
-        //更新平台剩余可预约数 给用户发短信提示预约成功
-
-        //todo：
     }
 
     /**
@@ -213,8 +230,26 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
             throw new GuiguException(ResultCodeEnum.CANCEL_ORDER_NO);
         }
         orderInfo.setOrderStatus(orderStatus);
-        updateByHospital(orderInfo);
+        JSONObject response = updateByHospital(orderInfo);
         baseMapper.updateById(orderInfo);
+        //更新平台剩余可预约数
+        OrderMqVo orderMqVo = new OrderMqVo();
+        orderMqVo.setScheduleId(orderInfo.getScheduleId());
+        JSONObject data = response.getJSONObject("data");
+        Integer reservedNumber = data.getInteger("reservedNumber");
+        Integer availableNumber = data.getInteger("availableNumber");
+        orderMqVo.setReservedNumber(reservedNumber);
+        orderMqVo.setAvailableNumber(availableNumber);
+        rabbitTemplate.convertAndSend(MQConst.EXCHANGE_DIRECT_ORDER, MQConst.ROUTING_KEY_ORDER,orderMqVo);
+        //给用户发短信提示预约成功
+        SmsVo smsVo = new SmsVo();
+        smsVo.setPhone(orderInfo.getPatientPhone());
+        smsVo.setTemplateCode("CST_ptdie100");
+        Map<String, Object> smsMap = new HashMap<>();
+        String fourBitRandom = RandomUtil.getFourBitRandom();
+        smsMap.put("number",fourBitRandom);
+        smsVo.setParam(smsMap);
+        rabbitTemplate.convertAndSend(MQConst.EXCHANGE_DIRECT_SMS_CANCEL,MQConst.ROUTING_KEY_SMS_CANCEL,smsVo);
     }
 
     /**
@@ -225,18 +260,17 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
      */
     private void cancelOrderWM(OrderInfo orderInfo, Integer orderStatus) {
         //微信退款
-        weiPayService.refund(orderInfo.getOutTradeNo(),orderInfo.getUserId());
+        weiPayService.refund(orderInfo.getOutTradeNo(), orderInfo.getUserId());
         //取消预约
         this.cancelOrderNM(orderInfo, orderStatus);
     }
-
     /**
      * return:
      * author: smile
      * version: 1.0
      * description:通知第三方医院修改订单状态
      */
-    private void updateByHospital(OrderInfo orderInfo) {
+    private JSONObject updateByHospital(OrderInfo orderInfo) {
         HospitalSet hospitalSet = hospSetFeignClient.getHospitalSet(orderInfo.getHoscode());
         Map<String, Object> map = new HashMap<>();
         map.put("hoscode", hospitalSet.getHoscode());
@@ -246,9 +280,10 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
         map.put("sign", HttpRequestHelper.getSign(map, hospitalSet.getSignKey()));
         JSONObject response = HttpRequestHelper.sendRequest(map, hospitalSet.getApiUrl() + "/order/updateCancelStatus");
         if (response.getInteger("code") != 200) {
-            log.error("查单失败，"+ "code：" + response.getInteger("code") + "，message：" + response.getString("message"));
+            log.error("查单失败，" + "code：" + response.getInteger("code") + "，message：" + response.getString("message"));
             throw new GuiguException(ResultCodeEnum.CANCEL_ORDER_FAIL);
         }
+        return response;
     }
     /**
      * return:
@@ -259,17 +294,35 @@ public class OrderInfoServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo
     private void packageOrderInfo(OrderInfo orderInfo) {
         orderInfo.getParam().put("orderStatusString", OrderStatusEnum.getStatusNameByStatus(orderInfo.getOrderStatus()));
     }
-
     /**
      * return:
      * author: smile
      * version: 1.0
      * description:根据订单号查询到订单信息
      */
-    public OrderInfo selectOrderInfoByOutradeNo(String outTradeNo,Long uid) {
+    public OrderInfo selectOrderInfoByOutradeNo(String outTradeNo, Long uid) {
         LambdaQueryWrapper<OrderInfo> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(OrderInfo::getOutTradeNo, outTradeNo);
         queryWrapper.eq(OrderInfo::getUserId, uid);
         return this.getOne(queryWrapper);
+    }
+
+    /**
+     * return:
+     * author: smile
+     * version: 1.0
+     * description:通知短信 定时发送
+     */
+    @Override
+    public void remind() {
+        String dateTime = new DateTime().plusDays(1).toString("yyyy-MM-dd");
+        LambdaQueryWrapper<OrderInfo> orderInfoLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        orderInfoLambdaQueryWrapper.eq(OrderInfo::getReserveDate,dateTime).notIn(OrderInfo::getOrderStatus,OrderStatusEnum.CANCLE.getStatus(),OrderStatusEnum.CANCLE_REFUND.getStatus(),OrderStatusEnum.CANCLE_UNREFUND.getStatus());
+        List<OrderInfo> list = baseMapper.selectList(orderInfoLambdaQueryWrapper);
+        list.forEach(P->{
+            SmsVo smsVo = new SmsVo();
+            smsVo.setPhone(P.getPatientPhone());
+            rabbitTemplate.convertAndSend(MQConst.EXCHANGE_DIRECT_SMS_REMIND,MQConst.ROUTING_KEY_SMS_REMIND,smsVo);
+        });
     }
 }

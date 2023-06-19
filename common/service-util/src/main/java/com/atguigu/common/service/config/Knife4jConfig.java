@@ -12,6 +12,7 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2WebMvc;
 @EnableSwagger2WebMvc
 public class Knife4jConfig {
 
+
     @Bean
     public Docket adminApiConfig() {
 
@@ -49,13 +50,14 @@ public class Knife4jConfig {
                 .build();
         return docket;
     }
+
     @Bean
     public Docket docketInner() {
         //指定使用Swagger2规范
         Docket docket = new Docket(DocumentationType.SWAGGER_2)
                 .apiInfo(new ApiInfoBuilder()
-                        .description("尚医通 APIs")
-                        .description("本文档描述了尚医通网站系统接口")
+                        .description("尚医通内部调用 APIs")
+                        .description("本文档描述了尚医通网站系统内部调用接口")
                         .contact("admin@atguigu.com")
                         .version("1.0")
                         .build())

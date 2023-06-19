@@ -121,7 +121,6 @@ public class HospitalServiceImp implements HospitalService {
         } else {
             throw new GuiguException(ResultCodeEnum.PARAM_ERROR);
         }
-
     }
 
     /**

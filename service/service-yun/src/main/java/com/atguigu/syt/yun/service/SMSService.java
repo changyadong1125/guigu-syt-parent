@@ -1,5 +1,7 @@
 package com.atguigu.syt.yun.service;
 
+import com.atguigu.syt.vo.sms.SmsVo;
+
 /**
  * project:guigu-syt-parent
  * package:com.atguigu.syt.order.service
@@ -12,4 +14,10 @@ package com.atguigu.syt.yun.service;
  */
 public interface SMSService {
     boolean sendCode(String phone);
+
+    void sendMessage(SmsVo smsVo);
+
+    void sendMessageCancel(SmsVo smsVo);
+
+    void sendMessageRemind(SmsVo smsVo);
 }

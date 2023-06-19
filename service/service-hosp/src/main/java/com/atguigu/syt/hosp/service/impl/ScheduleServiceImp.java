@@ -13,6 +13,7 @@ import com.atguigu.syt.model.hosp.Schedule;
 import com.atguigu.syt.vo.hosp.BookingScheduleRuleVo;
 import com.atguigu.syt.vo.hosp.ScheduleOrderVo;
 import com.atguigu.syt.vo.hosp.ScheduleRuleVo;
+import com.atguigu.syt.vo.order.OrderMqVo;
 import org.bson.types.ObjectId;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -257,6 +258,29 @@ public class ScheduleServiceImp implements ScheduleService {
             return scheduleOrderVo;
         }
         return null;
+    }
+
+    /**
+     * return:
+     * author: smile
+     * version: 1.0
+     * description:更新下医生的可预约数和剩余可预约数
+     * mongo save 是覆盖式修改
+     */
+    @Override
+    public void updateAvaNumber(OrderMqVo orderMqVo) {
+        String scheduleId = orderMqVo.getScheduleId();
+        Integer availableNumber = orderMqVo.getAvailableNumber();
+        Integer reservedNumber = orderMqVo.getReservedNumber();
+
+        Optional<Schedule> optionalSchedule = scheduleRepository.findById(new ObjectId(scheduleId));
+        if (optionalSchedule.isPresent()){
+            Schedule schedule = optionalSchedule.get();
+            schedule.setAvailableNumber(availableNumber);
+            schedule.setReservedNumber(reservedNumber);
+            scheduleRepository.save(schedule);
+        }
+
     }
 
     /**
