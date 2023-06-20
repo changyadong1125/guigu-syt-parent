@@ -33,4 +33,8 @@ public class MQConst {
     public static final String EXCHANGE_DIRECT_SMS_REMIND = "exchange.direct.sms.remind";
     public static final String ROUTING_KEY_SMS_REMIND = "routing.sms.remind";
     public static final String QUEUE_SMS_REMIND  = "queue.sms.remind";
+
+    public static final String EXCHANGE_DIRECT_USER_IMG = "exchange.direct.user.img";
+    public static final String ROUTING_KEY_USER_IMG = "routing.user.img";
+    public static final String QUEUE_USER_IMG  = "queue.user.img";
 }

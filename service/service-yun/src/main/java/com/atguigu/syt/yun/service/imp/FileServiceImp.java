@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.joda.time.DateTime;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -37,6 +38,7 @@ import java.util.UUID;
 @Slf4j
 public class FileServiceImp implements FileService {
     private final OssConstantProperties ossConstantProperties;
+    private final RedisTemplate<Object,Object> redisTemplate;
 
     /**
      * return:
@@ -45,7 +47,7 @@ public class FileServiceImp implements FileService {
      * description:文件上传
      */
     @Override
-    public Map<String, String> upload(MultipartFile file) {
+    public Map<String, String> upload(MultipartFile file,Long uid) {
         // Endpoint以华东1（杭州）为例，其它Region请按实际情况填写。
         String endpoint = ossConstantProperties.getEndpoint();
         // 阿里云账号AccessKey拥有所有API的访问权限，风险很高。强烈建议您创建并使用RAM用户进行API访问或日常运维，请登录RAM控制台创建RAM用户。
@@ -78,8 +80,9 @@ public class FileServiceImp implements FileService {
             HashMap<String, String> map = new HashMap<>();
             map.put("previewUrl", url.toString()); //页面中授权预览图片
             map.put("url", objectName); //数据库存储
+//           保存到redis中
+            redisTemplate.opsForSet().add(uid+":beforeCommit",objectName);
             return map;
-
         } catch (Exception oe) {
             log.info(ExceptionUtils.getStackTrace(oe));
             throw new GuiguException(ResultCodeEnum.FAIL, oe);

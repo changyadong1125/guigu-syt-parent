@@ -15,7 +15,7 @@ import java.util.Map;
  * @Description:
  */
 public interface FileService {
-    Map<String, String> upload(MultipartFile file);
+    Map<String, String> upload(MultipartFile file,Long uid );
 
     String getPreviewUrl(String objectName);
 }

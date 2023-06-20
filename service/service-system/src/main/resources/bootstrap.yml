@@ -1,0 +1,7 @@
+spring:
+  cloud:
+    nacos:
+      server-addr: localhost:8848
+      config:
+        file-extension: yml
+        name: system-service

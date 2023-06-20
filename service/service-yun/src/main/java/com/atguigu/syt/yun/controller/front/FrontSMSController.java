@@ -41,5 +41,4 @@ public class FrontSMSController {
         boolean flag = smsService.sendCode(phone);
         return flag ? Result.ok().message("发送成功") : Result.fail().message("发送失败");
     }
-
 }

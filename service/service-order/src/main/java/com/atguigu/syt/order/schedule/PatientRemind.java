@@ -28,7 +28,7 @@ public class PatientRemind {
     fixedDelay:表示当一个定时任务执行完成之后在延迟多长时间执行下一个任务
     fixedRate:表示每隔多长时间执行一次任务
      */
-    @Scheduled(cron = "*/5 * * * * ?")
+    @Scheduled(cron = "0 0 18 * * ?")
     public void remind(){
         orderInfoService.remind();
     }

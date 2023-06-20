@@ -38,7 +38,6 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> implements UserInfoService {
     private final DictFeignClient dictFeignClient;
-
     private final FileFeignClient fileFeignClient;
     @Resource
     private  RedisTemplate<String, String> redisTemplate;
@@ -55,7 +54,6 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
         userInfoLambdaQueryWrapper.eq(UserInfo::getOpenid, openId);
         return baseMapper.selectOne(userInfoLambdaQueryWrapper);
     }
-
     /**
      * return:
      * author: smile
@@ -64,6 +62,8 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> i
      */
     @Override
     public boolean updateUserInfo(Long uid, UserAuthVo userAuthVo) {
+        //存储用户图片
+        redisTemplate.opsForSet().add(uid+":afterCommit",userAuthVo.getCertificatesUrl());
         UserInfo userInfo = new UserInfo();
         userInfo.setId(uid);
         BeanUtils.copyProperties(userAuthVo, userInfo);

@@ -43,8 +43,8 @@ public class FrontFileController {
     @ApiOperation("文件上传")
     @PostMapping(value = "/upload")
     public Result<?> upload(MultipartFile file, HttpServletRequest request, HttpServletResponse response) {
-        authContextHolder.checkAuth(request,response);
-        Map<String, String> map = fileService.upload(file);
+        Long uid = authContextHolder.checkAuth(request, response);
+        Map<String, String> map = fileService.upload(file,uid);
         return Result.ok(map);
     }
 }

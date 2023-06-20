@@ -8,6 +8,7 @@ import com.atguigu.syt.vo.user.UserAuthVo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -34,6 +35,9 @@ public class FrontUserInfoController {
 
     @Resource
     private AuthContextHolder authContextHolder;
+    @Resource
+    private RedisTemplate<Object,Object> redisTemplate;
+
 
     /**
      * return:
@@ -59,8 +63,8 @@ public class FrontUserInfoController {
     @GetMapping("/getUserAuthInfo")
     @ApiOperation("获取用户认证信息")
     public Result<?> getAuthUserInfo(HttpServletRequest request, HttpServletResponse response) {
-        Long aLong = authContextHolder.checkAuth(request, response);
-        UserInfo userInfo = userInfoService.getAuthUserInfo(aLong);
+        Long uid = authContextHolder.checkAuth(request, response);
+        UserInfo userInfo = userInfoService.getAuthUserInfo(uid);
         return Result.ok(userInfo);
     }
 

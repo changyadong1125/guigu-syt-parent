@@ -11,8 +11,6 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2WebMvc;
 @Configuration
 @EnableSwagger2WebMvc
 public class Knife4jConfig {
-
-
     @Bean
     public Docket adminApiConfig() {
 
@@ -29,10 +27,8 @@ public class Knife4jConfig {
                 .select()
                 .paths(PathSelectors.regex("/admin/.*"))
                 .build();
-
         return docket;
     }
-
     @Bean
     public Docket docketFront() {
         //指定使用Swagger2规范
@@ -50,7 +46,6 @@ public class Knife4jConfig {
                 .build();
         return docket;
     }
-
     @Bean
     public Docket docketInner() {
         //指定使用Swagger2规范

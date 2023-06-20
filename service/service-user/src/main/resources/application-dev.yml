@@ -17,6 +17,12 @@ spring:
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8
+  rabbitmq:
+    port: 5672
+    username: guest
+    password: guest
+    virtual-host: /
+    host: 101.43.162.188
 
 logging:
   level:
