@@ -1,10 +1,6 @@
 package com.atguigu.syt.cmn.controller.admin;
 
 
-import org.springframework.web.bind.annotation.RequestMapping;
-
-import org.springframework.web.bind.annotation.RestController;
-
 /**
  * <p>
  *  前端控制器
@@ -13,9 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @author atguigu
  * @since 2023-05-31
  */
-@RestController
-@RequestMapping("/cmn/dictType")
-public class AdminDictTypeController {
 
+public class AdminDictTypeController {
 }
 

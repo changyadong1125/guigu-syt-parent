@@ -5,6 +5,7 @@ import com.atguigu.syt.cmn.service.RegionService;
 import com.atguigu.syt.model.cmn.Region;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,6 +38,7 @@ public class FrontRegionController {
      */
     @GetMapping("/list/{parentCode}")
     @ApiImplicitParam(name = "parentCode" ,value = "北京code")
+    @ApiOperation("根据code获取地区列表")
     public Result<?> getRegionList(@PathVariable String parentCode){
         List<Region> list = regionService.getRegionListByParentCode(parentCode);
         return Result.ok(list);

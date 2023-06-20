@@ -41,5 +41,4 @@ public class FrontDictController {
         List<Dict> list = dictService.getDictList(dictTypeId);
         return Result.ok(list);
     }
-
 }
